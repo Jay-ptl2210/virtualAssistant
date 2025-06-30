@@ -97,8 +97,8 @@ export const verifyOtp = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "strict",
-      secure: false,
+      sameSite: "None",
+      secure: true,
     });
 
     res.status(201).json({ message: "Registration successful", user });
@@ -128,8 +128,8 @@ export const login = async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       maxAge: 7 * 24 * 60 * 60 * 1000,
-      sameSite: "strict",
-      secure: false,
+      sameSite: "None",
+      secure: true,
     });
 
     res.status(200).json({ message: "Login successful", user });
