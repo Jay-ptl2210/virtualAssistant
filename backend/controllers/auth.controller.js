@@ -151,3 +151,58 @@ export const logout = async (req, res) => {
     res.status(500).json({ message: "Logout failed", error: error.message });
   }
 };
+
+// =================== Forget Password - OTP and Reset ===================
+
+// 1. Request OTP for password reset
+export const requestResetOtp = async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: "Email is required" });
+
+    const user = await User.findOne({ email });
+    if (!user) return res.status(404).json({ message: "Email not registered" });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    await sendOTP(email, otp);
+
+    otpStore.set(email, {
+      otp,
+      userId: user._id,
+      createdAt: Date.now(),
+    });
+
+    res.status(200).json({ message: "OTP sent to email" });
+  } catch (err) {
+    res.status(500).json({ message: "Failed to send OTP", error: err.message });
+  }
+};
+
+// 2. Reset password after verifying OTP
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, otp, newPassword } = req.body;
+    if (!email || !otp || !newPassword)
+      return res.status(400).json({ message: "All fields are required" });
+
+    const data = otpStore.get(email);
+    if (!data) return res.status(400).json({ message: "OTP not found or expired" });
+
+    if (Date.now() - data.createdAt > 5 * 60 * 1000) {
+      otpStore.delete(email);
+      return res.status(400).json({ message: "OTP expired" });
+    }
+
+    if (String(data.otp).trim() !== String(otp).trim()) {
+      return res.status(400).json({ message: "Invalid OTP" });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await User.findByIdAndUpdate(data.userId, { password: hashedPassword });
+
+    otpStore.delete(email);
+    res.status(200).json({ message: "Password reset successful" });
+  } catch (err) {
+    res.status(500).json({ message: "Password reset failed", error: err.message });
+  }
+};
