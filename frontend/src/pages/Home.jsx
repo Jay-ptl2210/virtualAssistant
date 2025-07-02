@@ -51,11 +51,18 @@ function Home() {
     utterance.lang = 'en-US';
 
     const voices = synth.getVoices();
-    const femaleVoice = voices.find(v =>
-      v.name === 'Google US English Female' || (v.lang === 'en-US' && v.name.toLowerCase().includes('female'))
+    const alexaLikeVoice = voices.find(v =>
+      v.name.toLowerCase().includes('alexa') ||
+      v.name === 'Google US English Female' ||
+      v.name === 'Samantha' ||
+      (v.name.toLowerCase().includes('english') && v.lang === 'en-US')
     ) || voices.find(v => v.lang === 'en-US');
 
-    if (femaleVoice) utterance.voice = femaleVoice;
+    if (alexaLikeVoice) utterance.voice = alexaLikeVoice;
+
+    utterance.pitch = 1.1;
+    utterance.rate = 1.0;
+    utterance.volume = 1.0;
 
     isSpeakingRef.current = true;
     setIsProcessing(true);
@@ -186,10 +193,14 @@ function Home() {
       const greeting = new SpeechSynthesisUtterance(`Hello ${userData.name}, what can I help you with?`);
       greeting.lang = 'en-US';
       const voices = synth.getVoices();
-      const femaleVoice = voices.find(v =>
-        v.name === 'Google US English Female' || (v.lang === 'en-US' && v.name.toLowerCase().includes('female'))
+      const voice = voices.find(v =>
+        v.name.toLowerCase().includes('alexa') ||
+        v.name === 'Google US English Female' ||
+        v.name === 'Samantha' ||
+        (v.name.toLowerCase().includes('english') && v.lang === 'en-US')
       ) || voices.find(v => v.lang === 'en-US');
-      if (femaleVoice) greeting.voice = femaleVoice;
+
+      if (voice) greeting.voice = voice;
       synth.cancel();
       synth.speak(greeting);
       greetingSpokenRef.current = true;
@@ -199,6 +210,17 @@ function Home() {
       synth.onvoiceschanged = greetUser;
     } else {
       greetUser();
+    }
+
+    // Optional: log available voices
+    const logVoices = () => {
+      const allVoices = synth.getVoices();
+      console.log("Available voices:", allVoices.map(v => `${v.name} (${v.lang})`));
+    };
+    if (synth.onvoiceschanged !== undefined) {
+      synth.onvoiceschanged = logVoices;
+    } else {
+      logVoices();
     }
 
     return () => {
@@ -212,72 +234,40 @@ function Home() {
 
   return (
     <div className='min-h-screen animate-gradient-shift neural-bg relative overflow-hidden'>
-      {/* Background Particles */}
+      {/* Particles */}
       <div className="particles">
         {[...Array(20)].map((_, i) => (
-          <div
-            key={i}
-            className="particle"
-            style={{
-              left: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 20}s`,
-              animationDuration: `${15 + Math.random() * 10}s`
-            }}
-          />
+          <div key={i} className="particle" style={{
+            left: `${Math.random() * 100}%`,
+            animationDelay: `${Math.random() * 20}s`,
+            animationDuration: `${15 + Math.random() * 10}s`
+          }} />
         ))}
       </div>
 
       <div className='absolute top-6 right-6 flex gap-4 z-50 animate-slide-in-up'>
-  {/* Volume Toggle */}
-  <button
-    onClick={() => setIsMuted(!isMuted)}
-    className='glass-dark hover-lift p-3 rounded-full text-white'
-    title={isMuted ? "Unmute" : "Mute"}
-  >
-    {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
-  </button>
+        <button onClick={() => setIsMuted(!isMuted)} className='glass-dark hover-lift p-3 rounded-full text-white' title={isMuted ? "Unmute" : "Mute"}>
+          {isMuted ? <VolumeX size={20} /> : <Volume2 size={20} />}
+        </button>
+        <button onClick={() => navigate("/costomize")} className='glass-dark hover-lift p-3 rounded-full text-white' title="Settings">
+          <Settings size={20} />
+        </button>
+        <button onClick={handleLogOut} className='glass-dark hover-lift p-3 rounded-full text-red-400 hover:text-red-300' title="Logout">
+          <LogOut size={20} />
+        </button>
+        <button onClick={() => navigate("/about")} className='glass-dark hover-lift px-4 py-2 rounded-xl text-cyan-300 font-semibold border border-cyan-400 transition hover:bg-cyan-600/10' title="About">
+          About
+        </button>
+      </div>
 
-  {/* Settings */}
-  <button
-    onClick={() => navigate("/costomize")}
-    className='glass-dark hover-lift p-3 rounded-full text-white'
-    title="Settings"
-  >
-    <Settings size={20} />
-  </button>
-
-  {/* Logout */}
-  <button
-    onClick={handleLogOut}
-    className='glass-dark hover-lift p-3 rounded-full text-red-400 hover:text-red-300'
-    title="Logout"
-  >
-    <LogOut size={20} />
-  </button>
-
-  {/* About Button */}
-  <button
-    onClick={() => navigate("/about")}
-    className='glass-dark hover-lift px-4 py-2 rounded-xl text-cyan-300 font-semibold border border-cyan-400 transition hover:bg-cyan-600/10'
-    title="About"
-  >
-    About
-  </button>
-</div>
-
-
-      {/* Main Card */}
       <div className='flex flex-col justify-center items-center min-h-screen px-4 relative z-10'>
         <div className='relative rounded-[2rem] p-10 max-w-2xl w-full backdrop-blur-md border border-cyan-400/20 bg-gradient-to-br from-white/5 to-cyan-400/5 shadow-[0_0_50px_rgba(0,255,255,0.1)] transition-all hover:shadow-[0_0_80px_rgba(0,255,255,0.2)]'>
-
-          {/* Listening Dots */}
           <div className='absolute top-4 right-4 flex gap-1'>
-            <span className={`w-2 h-2 rounded-full bg-cyan-400 animate-pulse ${listening ? 'opacity-100' : 'opacity-20'}`}></span>
-            <span className={`w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-100 ${listening ? 'opacity-100' : 'opacity-20'}`}></span>
-            <span className={`w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-200 ${listening ? 'opacity-100' : 'opacity-20'}`}></span>
+            <span className={`w-2 h-2 rounded-full bg-cyan-400 animate-pulse ${listening ? 'opacity-100' : 'opacity-20'}`} />
+            <span className={`w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-100 ${listening ? 'opacity-100' : 'opacity-20'}`} />
+            <span className={`w-2 h-2 rounded-full bg-cyan-400 animate-pulse delay-200 ${listening ? 'opacity-100' : 'opacity-20'}`} />
           </div>
 
-          {/* Assistant Avatar */}
           <div className='flex justify-center mb-6'>
             <div className='relative'>
               <div className='w-36 h-36 rounded-full overflow-hidden border-4 border-cyan-400/50 shadow-xl animate-float relative'>
@@ -290,7 +280,6 @@ function Home() {
             </div>
           </div>
 
-          {/* Greeting and Assistant Name */}
           <div className='text-center mb-6'>
             <h1 className='text-white text-2xl font-bold mb-2 animate-slide-in-up'>
               I am <span className='text-cyan-300 typing-animation'>{userData?.assistantName}</span>
@@ -298,17 +287,14 @@ function Home() {
             <p className='text-cyan-200 text-sm italic'>
               Say "<span className='text-cyan-400 font-semibold'>{userData?.assistantName}</span>" to activate
             </p>
-              <p className='text-cyan-300 text-sm mt-4'>
+            <p className='text-cyan-300 text-sm mt-4'>
               Don’t know how to use?{' '}
-              <span
-      onClick={() => navigate('/about')}
-      className='underline text-cyan-400 hover:text-white cursor-pointer font-medium'
-    >
-      Go to About
-    </span>
-  </p>
+              <span onClick={() => navigate('/about')} className='underline text-cyan-400 hover:text-white cursor-pointer font-medium'>
+                Go to About
+              </span>
+            </p>
           </div>
-          {/* Speaking Status */}
+
           <div className='flex justify-center mb-6'>
             <div className='w-24 h-24 rounded-full overflow-hidden relative'>
               {isProcessing ? (
@@ -323,23 +309,13 @@ function Home() {
             </div>
           </div>
 
-          {/* Conversation Text */}
           {(userText || aiText) && (
             <div className='glass rounded-xl p-4 mb-4 animate-slide-in-up'>
-              {userText && (
-                <div className='text-cyan-300 text-sm mb-2'>
-                  <span className='font-semibold'>You:</span> {userText}
-                </div>
-              )}
-              {aiText && (
-                <div className='text-white text-sm'>
-                  <span className='font-semibold text-cyan-400'>{userData?.assistantName}:</span> {aiText}
-                </div>
-              )}
+              {userText && <div className='text-cyan-300 text-sm mb-2'><span className='font-semibold'>You:</span> {userText}</div>}
+              {aiText && <div className='text-white text-sm'><span className='font-semibold text-cyan-400'>{userData?.assistantName}:</span> {aiText}</div>}
             </div>
           )}
 
-          {/* Voice State */}
           <div className='text-center'>
             <p className='text-cyan-200 text-xs'>
               {isMuted ? '🔇 Muted' : listening ? '🎤 Listening...' : '⏸️ Waiting for activation'}
