@@ -21,7 +21,7 @@ https://virtualassistantbyjayptl.onrender.com
 
 ![Screenshot 2025-07-02 105002](https://github.com/user-attachments/assets/945f684a-c866-4ccc-bc34-719b0a5d5927)
 
-### ### Voice Interaction::
+### Voice Interaction::
 
 ![Screenshot 2025-07-02 104926](https://github.com/user-attachments/assets/07f888ac-027d-44c8-8174-b2159a8391dc)
 
